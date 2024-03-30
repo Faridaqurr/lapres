@@ -2,4 +2,5 @@
 
 Pada soal nomor 2 ini diperintahkan untuk membuat dua program yaitu register.sh dan login.sh
 
+![Gambar Contoh](https://example.com/image.jpg)
 
