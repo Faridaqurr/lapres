@@ -4,6 +4,18 @@ Pada soal ini diperintahkan untuk membuat dua program yaitu register.sh dan logi
 
 ![Gambar Contoh](https://github.com/Faridaqurr/lapres/blob/main/9ced4635ed159aa08306a03c8575e9a5.jpg)
 
+`mkdir praktikum1` untuk membuat folder praktikum
+
+`cd praktikum` untuk pindah ke directory praktikum sebelum membuat file
+
+`nano register.sh` untuk membuat konfigurasi program register.sh
+
+`bash register.sh` untuk menjalankan konfigurasi register.sh
+
+`nano login.sh` untuk membuat konfigurasi program login.sh
+
+`bash login.sh` untuk menjalankan konfigurasi login.sh
+
 ## soal 2b
 
 Ketika penyelesaian soal, pada program register harus menampilkan email, username, pernyataan keamanan dan jawaban, serta password
@@ -27,9 +39,13 @@ Saat memasukkan data, program dibuat agar ketika terdeteksi kata "admin" pada em
       		echo "User $username berhasil registrasi"
       	fi
 
+`[[ $user_type == "admin" ]]` untuk mendeteksi kata admin, sehingga akan otomatis user_type nya menjadi admin 
+
+`>> auth.log` untuk memasukkan spesifikasi data yang masuk untuk ditampung di auth.log
+
 ## soal 2d
 
-Dalam pembuatan password juga diminta untuk memenuhi beberapa kriteria password seperti jumlah psw minimal 8 dan minimal mengandung 1 huruf kapital dan juga angka, serta untuk enkripsinya menggunakan base64
+Dalam pembuatan password juga diminta untuk memenuhi beberapa kriteria password seperti jumlah password minimal 8 dan minimal mengandung 1 huruf kapital dan juga angka, serta untuk enkripsinya menggunakan base64
 
 => fungsi untuk enkripsi pasword menggunakan base64
    
@@ -37,7 +53,9 @@ Dalam pembuatan password juga diminta untuk memenuhi beberapa kriteria password 
     {
     	echo -n "$1" | base64
     }
-    
+
+`-n "$1"` untuk menampilkan teks (password) tanpa menambahkan newline
+
 => fungsi untuk ketentuan password
        
     if [[ ${#password} -lt  8 || !("$password" =~ [[:lower:]]) || !("$password" =~ [[:upper:]]) || !("$password" =~ [0-9]) ]]; then
@@ -47,11 +65,22 @@ Dalam pembuatan password juga diminta untuk memenuhi beberapa kriteria password 
     else
     		break
     fi
+
+`-lt  8` untuk cek jumlah password kurang dari 8 atau tidak
+
+`[[:lower:]]` untuk cek apakah mengandung huruf kecil
+
+`[[:upper:]]` untuk cek apakah mengandung huruf kapital
+
+`[0-9]` untuk cek apakah mengandung angka
+
 ## soal 2e
 
 Semua data yang telah diinputkan akan disimpan dalam file users.txt
 
     echo "$email:$usename:$security_question:$security_answer:$encrypted_password:$user_type" >> users.txt
+
+`>> users.txt` untuk menyimpan semua data yang diinputkan ke users.txt
 
 ## soal 2f
 
@@ -75,6 +104,10 @@ Dalam program login, harus menampilkan opsi lupa password dan ketika memilih ops
         {
           local email=$1
 
+`email` untuk menyimpan inputan ke alamat email
+
+`reset_password $email` untuk memanggil fungsi alamat reset password dengan email sebagai argumen tambahannya
+
     #fungsi untuk reset password
     if check_registered_email "$email"; then
         security_question=$(grep "^$email" users.txt | cut -d':' -f3)
@@ -97,6 +130,12 @@ Dalam program login, harus menampilkan opsi lupa password dan ketika memilih ops
         echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [PASSWORD RESET FAILED] ERROR: User with email $email not found." >> auth.log
     fi
     }
+
+`grep` untuk mengambil alamat email di dalam users.txt
+
+`cut -d':' -f3` untuk memilih kolom ke 3 dari file users.txt yang menunjukkan data security question
+
+`>> auth.log` untuk memasukkan spesifikasi data yang masuk untuk ditampung di auth.log
 
 ## soal 2h
 
@@ -142,6 +181,12 @@ Jika login berhasil maka akan di tampilkan pesan sukse, namun jika terdeteksi se
             fi
             ;;
 
+`*admin*` untuk konfirmasi masukan yang terdapat kata adminnya
+
+`edit_email` untuk memanggil fungsi edit_email
+
+`delete_email` untuk memanggil fungsi delete_email
+
 ## soal 2i
 
 Ketika memilih menu admin edit dan delete user, maka akan memunculkan tampilan untuk inputan email atau username
@@ -162,7 +207,11 @@ Ketika memilih menu admin edit dan delete user, maka akan memunculkan tampilan u
         echo "User $email updated successfully."
         echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [USER EDIT] User with email $email edited successfully." >> auth.log
     }
-    
+
+`local email=$1` untuk memanggil fungsi local email pada register.sh
+
+`>> auth.log` untuk memasukkan spesifikasi data yang masuk untuk ditampung di auth.log
+
     # Fungsi untuk menghapus user
     delete_user() 
     {
@@ -173,6 +222,14 @@ Ketika memilih menu admin edit dan delete user, maka akan memunculkan tampilan u
         echo "User $email deleted successfully"
         echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [USER DELETE] User with email $email deleted successfully" >> auth.log
     }
+
+`local email=$1` untuk memanggil fungsi local email pada register.sh
+
+`-i` untuk melakukan perubahan (delete) langsung
+
+`"/^$email:/d"` untuk menghapus seluruh data dari alamat email yang ditentukan
+
+`users.txt` untuk melakukan perubahan (delete) langsung di dalam users.txt
 
 ## soal 2j
 
