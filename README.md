@@ -1,241 +1,57 @@
-## soal 2a
+## Soal 1
 
-Pada soal ini diperintahkan untuk membuat dua program yaitu register.sh dan login.sh
+Gavriel adalah seorang cyber security enthusiast. Suatu hari, ia dikontrak oleh sebuah perusahaan ternama untuk membuat sebuah program yang cukup rumit dengan bayaran jutaan rupiah. Karena tergoda dengan nominal bayaran tersebut, Gavriel langsung menerima tawaran tersebut. Setelah mencoba membuat dan mengembangkan program tersebut selama seminggu, laptop yang digunakan Gavriel mengalami overheat dan mati total sehingga harus dilarikan ke tukang servis terdekat. Karena keterbatasan waktu dalam pembuatan program dan tidak ingin mengecewakan perusahaan, Gavriel meminta bantuan kalian untuk membuat program tersebut dengan ketentuan sebagai berikut:
 
-![Gambar Contoh](https://github.com/Faridaqurr/lapres/blob/main/9ced4635ed159aa08306a03c8575e9a5.jpg)
 
-`mkdir praktikum1` untuk membuat folder praktikum
+a. Program dapat menerima input path berupa ‘argv’ untuk mengatur folder dimana file akan dieksekusi
 
-`cd praktikum` untuk pindah ke directory praktikum sebelum membuat file
+b. Program tersebut berfungsi untuk mereplace string dengan ketentuan sebagai berikut:
 
-`nano register.sh` untuk membuat konfigurasi program register.sh
+        String m4LwAr3 direplace dengan string [MALWARE]
+        String 5pYw4R3 direplace dengan string [SPYWARE]
+        String R4nS0mWaR3 direplace dengan string [RANSOMWARE]
+        
+c. Program harus berjalan secara daemon, dan tidak diperbolehkan menggunakan command system() dalam pembuatan program
 
-`bash register.sh` untuk menjalankan konfigurasi register.sh
+d. Program akan secara terus menerus berjalan di background dengan jeda 15 detik
 
-`nano login.sh` untuk membuat konfigurasi program login.sh
+e. Catat setiap penghapusan string yang dilakukan oleh program pada sebuah file bernama virus.log dengan format: [dd-mm-YYYY][HH:MM:SS] Suspicious string at <file_name> successfully replaced!
 
-`bash login.sh` untuk menjalankan konfigurasi login.sh
+Contoh penggunaan: ./virus /home/user/virus
 
-## soal 2b
+Contoh isi file sebelum program dijalankan:
 
-Ketika penyelesaian soal, pada program register harus menampilkan email, username, pernyataan keamanan dan jawaban, serta password
+        pU=-JWQ$5$)D-[??%AVh]$cB6bm4LwAr3jEQC2p3R{HV]=-AUaxj:Qe+h
+        !aNX,i:!z3W=2;.tHc3&S+}6F)CFf%tfZLP1*w5m1PAzZJUux(
+        Pd&f8$F5=E?@#[6jd{TJKj]5pYw4R3{KK1?hz384$ge@iba5GAj$gqB41
+        #C&&a}M9C#f64Eb.?%c)dGbCvJXtU[?SE4h]BY4e1PR4nS0mWaR3{]S/{w?*
 
-    read -p "Email		  : " email
-    read -p "Username	  : " username
-    read -p "Security Question : " security_question
-    read -p "Security Answer   : " security_answer
-    read -sp "Password	  : " password
-    echo
-    
-## soal 2c
+Contoh isi file setelah setelah program dijalankan:
 
-Saat memasukkan data, program dibuat agar ketika terdeteksi kata "admin" pada email maka secara otomatis user tersebut akan dikategorikan sebagai admin
+        pU=-JWQ$5$)D-[??%AVh]$cB6b[MALWARE]jEQC2p3R{HV]=-AUaxj:Qe+h
+        !aNX,i:!z3W=2;.tHc3&S+}6F)CFf%tfZLP1*w5m1PAzZJUux(
+        Pd&f8$F5=E?@#[6jd{TJKj][SPYWARE]{KK1?hz384$ge@iba5GAj$gqB41
+        #C&&a}M9C#f64Eb.?%c)dGbCvJXtU[?SE4h]BY4e1P[RANSOMWARE]{]S/{w?*
 
-      	if [[ $user_type == "admin" ]]; then
-      		echo "[ $(date +'%d%m%Y %H:%M:%S') ] [REGISTER SUCCESS] Admin $username berhasil registrasi." >> auth.log
-      		echo "Admin $username berhasil regitrasi"
-      	else
-      		echo "[ $(date +'%d%m%Y %H:%M:%S') ] [REGISTER SUCCESS] User $username berhasil regitrasi." >> auth.log
-      		echo "User $username berhasil registrasi"
-      	fi
+## ! Penyelesaian !
 
-`[[ $user_type == "admin" ]]` untuk mendeteksi kata admin, sehingga akan otomatis user_type nya menjadi admin 
+### soal 2a
 
-`>> auth.log` untuk memasukkan spesifikasi data yang masuk untuk ditampung di auth.log
+Pada soal ini diminta agar dapat menerima input path berupa ‘argv’ untuk mengatur folder dimana file akan dieksekusi
 
-## soal 2d
+### soal 2b
 
-Dalam pembuatan password juga diminta untuk memenuhi beberapa kriteria password seperti jumlah password minimal 8 dan minimal mengandung 1 huruf kapital dan juga angka, serta untuk enkripsinya menggunakan base64
+        if (entry->d_type == DT_REG) {
+                char filename[MAX_PATH_LENGTH];
+                // Copying path and entry name to filename
+                strncpy(filename, path, MAX_PATH_LENGTH);
+                strncat(filename, "/", MAX_PATH_LENGTH - strlen(filename) - 1);
+                strncat(filename, entry->d_name, MAX_PATH_LENGTH - strlen(filename) - 1);
 
-=> fungsi untuk enkripsi pasword menggunakan base64
-   
-    encrypt_password()
-    {
-    	echo -n "$1" | base64
-    }
+                replaceString(filename, "m4LwAr3", "[MALWARE]", log);
+                replaceString(filename, "5pYw4R3", "[SPYWARE]", log);
+                replaceString(filename, "R4nS0mWaR3", "[RANSOMWARE]", log);
+            }
 
-`-n "$1"` untuk menampilkan teks (password) tanpa menambahkan newline
 
-=> fungsi untuk ketentuan password
-       
-    if [[ ${#password} -lt  8 || !("$password" =~ [[:lower:]]) || !("$password" =~ [[:upper:]]) || !("$password" =~ [0-9]) ]]; then
-        echo -e  "!Password harus berjumlah 8 karakter atau lebih!\n!Tambahkan minimal 1 huruf kapital dan angka!"
-        read -sp "Password: " password
-        echo
-    else
-    		break
-    fi
-
-`-lt  8` untuk cek jumlah password kurang dari 8 atau tidak
-
-`[[:lower:]]` untuk cek apakah mengandung huruf kecil
-
-`[[:upper:]]` untuk cek apakah mengandung huruf kapital
-
-`[0-9]` untuk cek apakah mengandung angka
-
-## soal 2e
-
-Semua data yang telah diinputkan akan disimpan dalam file users.txt
-
-    echo "$email:$usename:$security_question:$security_answer:$encrypted_password:$user_type" >> users.txt
-
-`>> users.txt` untuk menyimpan semua data yang diinputkan ke users.txt
-
-## soal 2f
-
-Setelah melakukan register, terdapat juga program untuk login yang cukup menampilkan email dan password
-
-    echo "~USER LOGIN~"
-    echo "1. Login"
-    echo "2. Forgot Password"
-    read -p "Choose an option: " option
-
-## soal 2g
-
-Dalam program login, harus menampilkan opsi lupa password dan ketika memilih opsi tersebut akan ditampilkan pertanyaan keamanan dan pengguna harus memasukkan jawaban dari pertanyaan keamanan tersebut agar password ditampilkan
-
-    #case untuk forget password
-    2) 
-                read -p "Enter your email: " email
-                reset_password "$email"
-                ;;
-        reset_password() 
-        {
-          local email=$1
-
-`email` untuk menyimpan inputan ke alamat email
-
-`reset_password $email` untuk memanggil fungsi alamat reset password dengan email sebagai argumen tambahannya
-
-    #fungsi untuk reset password
-    if check_registered_email "$email"; then
-        security_question=$(grep "^$email" users.txt | cut -d':' -f3)
-        echo "Security question: $security_question"
-        read -p "Enter your answer: " security_answer
-
-        stored_security_answer=$(grep "^$email" users.txt | cut -d':' -f4)
-
-        if [ "$security_answer" == "$stored_security_answer" ]; then
-            encrypted_password=$(grep "^$email" users.txt | cut -d':' -f5)
-            decrypted_password=$(decode_base64 "$encrypted_password")
-            echo "Your password is: $decrypted_password"
-            echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [PASSWORD RESET] Password reset requested for user with email $email." >> auth.log
-        else
-            echo "Incorrect security answer. Password reset failed."
-            echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [PASSWORD RESET FAILED] ERROR: Incorrect security answer for user with email $email." >> auth.log
-        fi
-    else
-        echo "Email not found. Please register first."
-        echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [PASSWORD RESET FAILED] ERROR: User with email $email not found." >> auth.log
-    fi
-    }
-
-`grep` untuk mengambil alamat email di dalam users.txt
-
-`cut -d':' -f3` untuk memilih kolom ke 3 dari file users.txt yang menunjukkan data security question
-
-`>> auth.log` untuk memasukkan spesifikasi data yang masuk untuk ditampung di auth.log
-
-## soal 2h
-
-Jika login berhasil maka akan di tampilkan pesan sukse, namun jika terdeteksi seorang admin yang login maka akan muncul output tambahan yaitu admin menu yang berisikan add user, edit user, delete user, dan logout untuk memudahkan pkerjaan admin
-
-     # case untuk login admin
-     1)
-            read -p "Email: " email
-            read -sp "Password: " password
-            echo
-            if authenticate_user "$email" "$password"; then
-                if [[ $email == *admin* ]]; then
-                    echo "Welcome, Admin!"
-                    echo "Admin menu:"
-                    echo "1. Add user"
-                    echo "2. Edit user"
-                    echo "3. Delete user"
-                    echo "4. Logout"
-                    read -p "Enter your choice: " choice
-    
-                    case $choice in
-                        1)
-                            add_user
-                            ;;
-                        2)
-                            read -p "Enter email of the user to edit: " edit_email
-                            edit_user "$edit_email"
-                            ;;
-                        3)
-                            read -p "Enter email of the user to delete: " delete_email
-                            delete_user "$delete_email"
-                            ;;
-                        4)
-                            echo "Logout successful"
-                            ;;
-                        *)
-                            echo "Invalid choice"
-                            ;;
-                    esac
-                else
-                    echo "Login successful."
-                fi
-            fi
-            ;;
-
-`*admin*` untuk konfirmasi masukan yang terdapat kata adminnya
-
-`edit_email` untuk memanggil fungsi edit_email
-
-`delete_email` untuk memanggil fungsi delete_email
-
-## soal 2i
-
-Ketika memilih menu admin edit dan delete user, maka akan memunculkan tampilan untuk inputan email atau username
-
-    # Fungsi untuk mengedit
-    edit_user() 
-    {
-        local email=$1
-        read -p "Enter new username: " new_username
-        read -p "Enter new security question: " new_security_question
-        read -p "Enter new security answer: " new_security_answer
-        read -sp "Enter new password: " new_password
-        echo
-    
-        # Update user dan dimasukkan ke  users.txt
-        sed -i "s/^$email:.*/$email:$new_username:$new_security_question:$new_security_answer:$(echo -n $new_password | base64):user/g" users.txt
-    
-        echo "User $email updated successfully."
-        echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [USER EDIT] User with email $email edited successfully." >> auth.log
-    }
-
-`local email=$1` untuk memanggil fungsi local email pada register.sh
-
-`>> auth.log` untuk memasukkan spesifikasi data yang masuk untuk ditampung di auth.log
-
-    # Fungsi untuk menghapus user
-    delete_user() 
-    {
-        local email=$1
-    
-    #hapus user dari users.txt
-        sed -i "/^$email:/d" users.txt
-        echo "User $email deleted successfully"
-        echo "[ $(date +'%d/%m/%Y %H:%M:%S') ] [USER DELETE] User with email $email deleted successfully" >> auth.log
-    }
-
-`local email=$1` untuk memanggil fungsi local email pada register.sh
-
-`-i` untuk melakukan perubahan (delete) langsung
-
-`"/^$email:/d"` untuk menghapus seluruh data dari alamat email yang ditentukan
-
-`users.txt` untuk melakukan perubahan (delete) langsung di dalam users.txt
-
-## soal 2j
-
-Seluruh data log yang diinputkan akan disimpan ke dalam auth.log baik login maupun register, dengan format [DATE][TYPE][MASSAGE]
-
-![Gambar Contoh](https://github.com/Faridaqurr/lapres/blob/main/9ced4635ed159aa08306a03c8575e9a5.jpg)
-
-
-
+     
