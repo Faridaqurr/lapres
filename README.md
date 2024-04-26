@@ -134,7 +134,7 @@ pada soal ini diminta agar setiap penggantian string yang dilakukan oleh program
         printf("%s Suspicious string replaced at %s\n", timestamp, filename);
         fprintf(log, "%s Suspicious string at %s successfully replaced!\n", timestamp, filename);
 
-`struct tm *tm_info = localtime(&now);...` digunakan untuk mengonversi nilai waktu ke dalam struktur tm yang menyimpan informasi waktu terperinci, seperti tahun, bulan, tanggal, jam, menit, dan detik yang kemudian disimpan dalam variabel tm_info
+`struct tm *tm_info = localtime(&now);` digunakan untuk mengonversi nilai waktu ke dalam struktur tm yang menyimpan informasi waktu terperinci, seperti tahun, bulan, tanggal, jam, menit, dan detik yang kemudian disimpan dalam variabel tm_info
 
 `char timestamp[MAX_STRING_LENGTH];` digunakan untuk menyimpan string format waktu yang akan dicetak
 
