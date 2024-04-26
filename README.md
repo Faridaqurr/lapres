@@ -41,6 +41,8 @@ Pada soal ini diminta agar dapat menerima input path berupa ‘argv’ untuk men
 
 ### soal 2b
 
+pada soal ini diminta agar program berfungsi untuk mereplace string sesuai permintaan 
+
         if (entry->d_type == DT_REG) {
                 char filename[MAX_PATH_LENGTH];
                 // Copying path and entry name to filename
