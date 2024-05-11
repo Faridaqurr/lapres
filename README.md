@@ -364,3 +364,220 @@ Fungsi untuk menuliskan log ke dalam db.log ketika file dari folder new-data dip
 
 ## Revisi
 
+Pada code rate.c sebelumnya hanya bisa dijalankan untuk mengeluarkan output per file menggunakan ./rate <nama file>. Sehingga pada revisi ini code diubah agar juga dapat dijalankan untuk mengeluarkan output semua file dengan satu command yaitu ./rate
+
+code rate.c yang diperbarui:
+      
+      #include <stdio.h>
+      #include <stdlib.h>
+      #include <string.h>
+      #include <sys/ipc.h>
+      #include <sys/shm.h>
+      #include <dirent.h> 
+      
+      #define SHARED_MEM_KEY 1234
+      #define MAX_FILENAME_LENGTH 256
+      
+      struct Place {
+          char name[MAX_FILENAME_LENGTH];
+          float rating;
+      };
+      
+      struct Place findBestPlace(FILE *file) {
+          struct Place bestPlace = {"", 0.0};
+          // Melewati baris header
+          char line[MAX_FILENAME_LENGTH];
+          fgets(line, sizeof(line), file);
+      
+          while (fgets(line, sizeof(line), file) != NULL) {
+              char name[MAX_FILENAME_LENGTH];
+              float rating;
+              sscanf(line, "%[^,],%f", name, &rating);
+      
+              if (rating > bestPlace.rating) {
+                  strcpy(bestPlace.name, name);
+                  bestPlace.rating = rating;
+              }
+          }
+          return bestPlace;
+      }
+      
+      void processCSV(char *filename) {
+          // Mengakses shared memory yang telah dibuat oleh program auth.c dan db.c
+          int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
+          if (shmid == -1) {
+              perror("shmget");
+              exit(EXIT_FAILURE);
+          }
+          char *shm_ptr = shmat(shmid, NULL, 0);
+          if (shm_ptr == (char *)-1) {
+              perror("shmat");
+              exit(EXIT_FAILURE);
+          }
+      
+          // Menampilkan output
+          printf("\nType: ");
+          if (strstr(filename, "trashcan") != NULL) {
+              printf("Trash Can\n");
+          } else if (strstr(filename, "parkinglot") != NULL) {
+              printf("Parking Lot\n");
+          } else {
+              printf("Unknown\n");
+          }
+          printf("Filename: %s\n", filename);
+          printf("---------------------------------------\n");
+      
+          // Membuka file CSV yang terletak di folder database
+          char filepath[MAX_FILENAME_LENGTH + 20]; // Menyertakan path folder "database"
+          sprintf(filepath, "./database/%s", filename);
+          FILE *file = fopen(filepath, "r");
+          if (file == NULL) {
+              perror("fopen");
+              exit(EXIT_FAILURE);
+          }
+      
+          // Mencari tempat dengan rating tertinggi dari file CSV dan menampilkannya
+          struct Place bestPlace = findBestPlace(file);
+          printf("Name: %s\n", bestPlace.name);
+          printf("Rating: %.1f\n", bestPlace.rating);
+      
+          // Menutup file dan melepaskan shared memory
+          fclose(file);
+          if (shmdt(shm_ptr) == -1) {
+              perror("shmdt");
+              exit(EXIT_FAILURE);
+          }
+      }
+      
+      int main(int argc, char *argv[]) {
+          if (argc == 1) {
+              // Jika tidak ada argumen yang diberikan, tampilkan output untuk semua file CSV
+              DIR *dir;
+              struct dirent *ent;
+              if ((dir = opendir("./database")) != NULL) {
+                  while ((ent = readdir(dir)) != NULL) {
+                      if (strstr(ent->d_name, ".csv") != NULL) {
+                          processCSV(ent->d_name);
+                      }
+                  }
+                  closedir(dir);
+              } else {
+                  perror("opendir");
+                  return EXIT_FAILURE;
+              }
+          } else if (argc == 2) {
+              // Jika diberikan satu argumen, tampilkan output untuk file CSV yang disebutkan
+              processCSV(argv[1]);
+          } else {
+              // Jika diberikan lebih dari satu argumen, tampilkan pesan kesalahan
+              fprintf(stderr, "Usage: %s [filename.csv]\n", argv[0]);
+              return EXIT_FAILURE;
+          }
+      
+          return 0;
+      }
+
+1)Penambahan fungsi _processCSV_, karena pada code sebelumnya fungsi untuk outputnya dijabarkan di main-nya berbeda pada revisi code ini, pada code ini hanya melakukan pemanggilan fungsi output pada main-nya sedangkan untuk fungsi outputnya sendiri sudah di buat pada fungsi processCSV
+
+     void processCSV(char *filename) {
+             int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
+             if (shmid == -1) {
+                 perror("shmget");
+                 exit(EXIT_FAILURE);
+             }
+             char *shm_ptr = shmat(shmid, NULL, 0);
+             if (shm_ptr == (char *)-1) {
+                 perror("shmat");
+                 exit(EXIT_FAILURE);
+             }
+         
+             printf("\nType: ");
+             if (strstr(filename, "trashcan") != NULL) {
+                 printf("Trash Can\n");
+             } else if (strstr(filename, "parkinglot") != NULL) {
+                 printf("Parking Lot\n");
+             } else {
+                 printf("Unknown\n");
+             }
+             printf("Filename: %s\n", filename);
+             printf("---------------------------------------\n");
+         
+             char filepath[MAX_FILENAME_LENGTH + 20]; 
+             sprintf(filepath, "./database/%s", filename);
+             FILE *file = fopen(filepath, "r");
+             if (file == NULL) {
+                 perror("fopen");
+                 exit(EXIT_FAILURE);
+             }
+         
+             struct Place bestPlace = findBestPlace(file);
+             printf("Name: %s\n", bestPlace.name);
+             printf("Rating: %.1f\n", bestPlace.rating);
+         
+             fclose(file);
+             if (shmdt(shm_ptr) == -1) {
+                 perror("shmdt");
+                 exit(EXIT_FAILURE);
+             }
+         }
+
+`int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);` untuk akses shared memory
+
+`printf("\nType: ");` untuk penulisan output Type file
+
+`printf("Filename: %s\n", filename);` untuk penulisan output Filename
+
+`char filepath[MAX_FILENAME_LENGTH + 20];` untuk akses file di database
+
+`printf("Name: %s\n", bestPlace.name);` untuk penulisan Name dari nama tempat dengan rating terbaik
+
+`printf("Rating: %.1f\n", bestPlace.rating);` untuk penulisan Rating dari rating tertinggi
+
+`if (shmdt(shm_ptr) == -1)` untuk melepaskan shared memory ketika program sudah selesai
+
+2)Pengubahan di dalam main, karena isi main code sebelumnya adalah penjabaran untuk tampilan outputnya maka pada main code revisi ini hanya ada pemanggilan fungsi processCSV dan juga cara menjalankan code revisi ini sekarang bisa menggunakan argumen (nama file) atau tanpa argumen
+
+      int main(int argc, char *argv[]) {
+          if (argc == 1) {
+              DIR *dir;
+              struct dirent *ent;
+              if ((dir = opendir("./database")) != NULL) {
+                  while ((ent = readdir(dir)) != NULL) {
+                      if (strstr(ent->d_name, ".csv") != NULL) {
+                          processCSV(ent->d_name);
+                      }
+                  }
+                  closedir(dir);
+              } else {
+                  perror("opendir");
+                  return EXIT_FAILURE;
+              }
+          } else if (argc == 2) {
+              processCSV(argv[1]);
+          } else {
+              // Jika diberikan lebih dari satu argumen, tampilkan pesan kesalahan
+              fprintf(stderr, "Usage: %s [filename.csv]\n", argv[0]);
+              return EXIT_FAILURE;
+          }
+      
+          return 0;
+      }
+
+Jika pada code sebelumnya hanya ada `if (argc != 2)` untuk memunculkan output sesuai argumen yang diberikan (nama filenya), maka pada code revisinya menjadi:
+   
+   - `if (argc == 1)` jika tidak ada argumen yang ditambahkan maka akan menampilkan semua output file
+     
+   - `else if (argc == 2)` jika diberikan argumen (nama file) maka hanya akan menampilkan output dari file yang diminta
+     
+   - `else` jika argumen yang dimasukkan lebih, maka akan memunculkan pesan kesalahan
+
+## Hasil Output
+
+![Screenshot from 2024-05-10 04-32-36](https://github.com/Faridaqurr/lapres/assets/150933246/4326ede1-216d-4c38-b996-3c5f60ca54f1)
+
+![Screenshot from 2024-05-10 04-27-58](https://github.com/Faridaqurr/lapres/assets/150933246/5492e967-977a-4561-a30b-c7b0f4b18dbc)
+
+![Screenshot from 2024-05-10 04-29-19](https://github.com/Faridaqurr/lapres/assets/150933246/6c9d3264-2629-48c4-8624-a42aa5175f4e)
+
+![Screenshot from 2024-05-10 04-32-36](https://github.com/Faridaqurr/lapres/assets/150933246/2c11c6ef-9b8d-4384-ba40-1898fad25339)
+
