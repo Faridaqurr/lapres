@@ -157,17 +157,14 @@ Fungsi diatas untuk menyimpan informasi tentang tempat sampah dan tempat parkir 
 
       struct Place findBestPlace(FILE *file) {
           struct Place bestPlace = {"", 0.0};
-          // Melewati baris header
           char line[MAX_FILENAME_LENGTH];
           fgets(line, sizeof(line), file);
       
           while (fgets(line, sizeof(line), file) != NULL) {
-              // Memisahkan nama tempat dan rating
               char name[MAX_FILENAME_LENGTH];
               float rating;
               sscanf(line, "%[^,],%f", name, &rating);
       
-              // Memilih tempat dengan rating terbaik
               if (rating > bestPlace.rating) {
                   strcpy(bestPlace.name, name);
                   bestPlace.rating = rating;
@@ -187,8 +184,17 @@ Fungsi diatas untuk mencari tempat dengan rating tertinggi
 
 - *,%f*  dan  *&rating* untuk  membaca nilai float setelah tanda koma dan akan menyimpannya ke dalam variabel rating
 
-      void processCSV(char *filename) {
-          int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
+`while (fgets(line, sizeof(line), file) != NULL)` untuk membaca data dari file csv
+
+      int main(int argc, char *argv[]) {
+          if (argc != 2) {
+              fprintf(stderr, "Usage: %s <filename.csv>\n", argv[0]);
+              exit(EXIT_FAILURE);
+          }
+          
+`if (argc != 2)` untuk menjalankan program rate.c ini harus menggunakan argumen seperti ./rate <nama filenya> 
+
+       int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
           if (shmid == -1) {
               perror("shmget");
               exit(EXIT_FAILURE);
@@ -198,8 +204,15 @@ Fungsi diatas untuk mencari tempat dengan rating tertinggi
               perror("shmat");
               exit(EXIT_FAILURE);
           }
-  
-          printf("\nType: ");
+
+`int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);` untuk akses shared memory
+
+`0666` untuk token shared memory yang digunakan oleh auth.c dan db.c
+      
+          char filename[MAX_FILENAME_LENGTH];
+          strcpy(filename, argv[1]);
+      
+          printf("Type: ");
           if (strstr(filename, "trashcan") != NULL) {
               printf("Trash Can\n");
           } else if (strstr(filename, "parkinglot") != NULL) {
@@ -210,7 +223,7 @@ Fungsi diatas untuk mencari tempat dengan rating tertinggi
           printf("Filename: %s\n", filename);
           printf("---------------------------------------\n");
       
-          char filepath[MAX_FILENAME_LENGTH + 20];
+          char filepath[MAX_FILENAME_LENGTH + 20]; 
           sprintf(filepath, "./database/%s", filename);
           FILE *file = fopen(filepath, "r");
           if (file == NULL) {
@@ -227,23 +240,23 @@ Fungsi diatas untuk mencari tempat dengan rating tertinggi
               perror("shmdt");
               exit(EXIT_FAILURE);
           }
+      
+          return 0;
       }
 
-Fungsi diatas untuk menampilkan output dari program rate.c
+`strcpy(filename, argv[1]);` untuk membaca nama file yang ingin di proses
 
-`int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);` untuk akses shared memory
+`printf("Type: ");` untuk penulisan output Type filenya
 
-`printf("\nType: ");` untu mencetak string Type sesuai akhiran nama file
+`printf("Filename: %s\n", filename);` untuk penulisan output Filename
 
-`printf("Filename: %s\n", filename);` untuk mencetak string Filename yang berisi nama file csv-nya
+`sprintf(filepath, "./database/%s", filename);` akses file pada folder database
 
-`sprintf(filepath, "./database/%s", filename);` untuk akses ke folder database
+`printf("Name: %s\n", bestPlace.name);` untuk penulisan Name dari nama tempat dengan rating terbaik
 
-`printf("Name: %s\n", bestPlace.name);` untuk mencari dan menyimpan nama tempat dengan reting terbaik ke dalam variabel name
+`printf("Rating: %.1f\n", bestPlace.rating);` untuk penulisan Rating dari rating tertinggi
 
-`printf("Rating: %.1f\n", bestPlace.rating);` untuk mencari dan menyimpan rating terbaik ke dalam variabel rating
-
-`if (shmdt(shm_ptr) == -1)` untuk melepas shared memory jika proses sudah selesai
+`if (shmdt(shm_ptr) == -1)` untuk melepaskan shared memory ketika program sudah selesai
 
 ### soal 1e
 
@@ -527,7 +540,7 @@ code rate.c yang diperbarui:
 
 `printf("Filename: %s\n", filename);` untuk penulisan output Filename
 
-`char filepath[MAX_FILENAME_LENGTH + 20];` untuk akses file di database
+`sprintf(filepath, "./database/%s", filename);` untuk akses file di database
 
 `printf("Name: %s\n", bestPlace.name);` untuk penulisan Name dari nama tempat dengan rating terbaik
 
