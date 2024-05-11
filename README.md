@@ -243,6 +243,124 @@ Fungsi diatas untuk menampilkan output dari program rate.c
 
 `printf("Rating: %.1f\n", bestPlace.rating);` untuk mencari dan menyimpan rating terbaik ke dalam variabel rating
 
-`fclose(file);` untuk melepas shared memory jika proses sudah selesai
+`if (shmdt(shm_ptr) == -1)` untuk melepas shared memory jika proses sudah selesai
 
 ### soal 1e
+
+Pada soal ini diminta untuk membuat prgram db.c yang dapat memindahkan file dari new-data ke folder microservices/database menggunakan shared memory
+      
+      #define SHARED_MEM_KEY 1234
+      #define MAX_FILENAME_LENGTH 256
+      #define LOG_FILE "database/db.log"
+
+`#define SHARED_MEM_KEY 1234` untuk akses shared memory
+
+`#define LOG_FILE "database/db.log"` untuk mendefinisikan pembuatan db.log di dalam direktori database
+      
+      struct FileData {
+          char filename[MAX_FILENAME_LENGTH];
+      };
+      
+`char filename[MAX_FILENAME_LENGTH];` untuk menyimpan informasi mengenai semua file agar mudah untuk dikelola
+
+      void copyFilenameFromSharedMemory(char *shm_ptr, char *filename) {
+          strcpy(filename, shm_ptr);
+      }
+      
+`strcpy(shm_ptr, filename);` untuk menyalin string dari _filename_ ke _shm_ptr_ 
+
+      void moveFile(char *filename) {
+          char oldpath[MAX_FILENAME_LENGTH + 20]; 
+          sprintf(oldpath, "../new-data/%s", filename);
+          char newpath[MAX_FILENAME_LENGTH + 30];
+          sprintf(newpath, "./database/%s", filename);
+      
+          mkdir("./database", 0777);
+      
+          if (rename(oldpath, newpath) == 0) {
+              printf("File %s berhasil dipindahkan ke microservices/database.\n", filename);
+          } else {
+              perror("rename");
+          }
+      }
+      
+Fungsi diatas untuk memindahkan file ke folder database
+
+`sprintf(oldpath, "../new-data/%s", filename);` untuk akses ke folder new-data
+
+`sprintf(newpath, "./database/%s", filename);` untuk akses ke folder database
+
+`mkdir("./database", 0777);` untuk membuat folder database jika belum ada di dalam microservices
+
+      char* determineFileType(char *filename) {
+          if (strstr(filename, "trashcan") != NULL) {
+              return "Trash Can";
+          } else if (strstr(filename, "parkinglot") != NULL) {
+              return "Parking Lot";
+          } else {
+              return "Unknown";
+          }
+      }
+
+Fungsi diatas untuk menentukan Type file berdasarkan akhiran nama file
+
+`if (strstr(filename, "trashcan") != NULL)` untuk Type file yang berakhiran trashcan
+
+`else if (strstr(filename, "parkinglot") != NULL)` untuk Type file yang berakhiran parking lot
+
+`return "Unknown";` untuk kondisi jika tidak ada file yang berakhiran trashcan atau parkinglot
+       
+          int main() {
+          int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
+          if (shmid == -1) {
+              perror("shmget");
+              exit(EXIT_FAILURE);
+          }
+          char *shm_ptr = shmat(shmid, NULL, 0);
+          if (shm_ptr == (char *)-1) {
+              perror("shmat");
+              exit(EXIT_FAILURE);
+          }
+Fungsi untuk mengakses shared memory dari program auth.c
+
+`0666` token yang digunakan untuk akses shared memory
+
+          // Melepaskan shared memory
+          if (shmdt(shm_ptr) == -1) {
+              perror("shmdt");
+              exit(EXIT_FAILURE);
+          }
+Fungsi untuk melepas shared memory jika proses sudah selesai dijalankan
+
+### soal 1f
+
+Pada soal ini diminta untuk membuat log file yang masuk ke folder microservices/database ke dalam file db.log dengan contoh format [DD/MM/YY hh:mm:ss] [type] [filename]
+      
+      void writeLog(char *type, char *filename) {
+          FILE *log_file = fopen(LOG_FILE, "a");
+          if (log_file != NULL) {
+              time_t now = time(NULL);
+              struct tm *tm_info = localtime(&now);
+              char timestamp[20];
+              strftime(timestamp, 20, "%d/%m/%Y %H:%M:%S", tm_info);
+              fprintf(log_file, "[%s] [%s] [%s]\n", timestamp, type, filename);
+              fclose(log_file);
+          } else {
+              perror("fopen");
+          }
+      }
+
+Fungsi untuk menuliskan log ke dalam db.log ketika file dari folder new-data dipindahkan ke folder database
+
+`FILE *log_file = fopen(LOG_FILE, "a");` untuk membuka db.log dan melakukan penulisan log di dalamnya, namun jika belum ada db.log di dalam database maka akan otomatis dibuat
+
+`fprintf(log_file, "[%s] [%s] [%s]\n", timestamp, type, filename);` untuk penulisan format dari db.log
+
+`time_t now = time(NULL);` untuk mendapatkan waktu ketika file dipindahkan
+
+`struct tm *tm_info = localtime(&now);` untuk mengonversi waktu dalam bentuk time_t menjadi waktu lokal (dd/mm/yyyy HH:MM:SS)
+
+`char timestamp[20];` untuk menampung hasil dari konversi waktu
+
+## Revisi
+
