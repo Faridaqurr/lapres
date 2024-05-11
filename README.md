@@ -30,7 +30,80 @@ ex : `[07/04/2024 08:34:50] [Trash Can] [belobog_trashcan.csv]
 
 Contoh direktori awal:
 
+![Screenshot from 2024-05-11 17-09-58](https://github.com/Faridaqurr/lapres/assets/150933246/a9e9954d-63c4-402c-8ebb-7568502047bd)
 
 Contoh direktori akhir setelah dijalankan auth.c dan db.c:
 
+![Screenshot from 2024-05-11 17-10-26](https://github.com/Faridaqurr/lapres/assets/150933246/b003a07b-c4ff-4f51-af9c-05efd2baac8a)
 
+## Jawab
+
+### soal 1a
+
+Pada soal ini diminta untuk membuat sebuah program yang mengautentikasi file csv dengan syarat file berakhiran _parkinglot_ atau _trashacan_ dan menghapus file yang tidak memenuhi syarat autentikasi
+      
+      #define SHARED_MEM_KEY 1234
+      #define MAX_FILENAME_LENGTH 256
+
+`#define SHARED_MEM_KEY 1234` untuk mendefinisikan kunci/token dari shared memory yang dipakai program ini
+
+`#define MAX_FILENAME_LENGTH 256` untuk mendefinisikan panjang karakter nama file adalah 256 dan menghindari terjadinya perulangan angka 256 di tempat yang berbeda
+      
+      struct FileData {
+          char filename[MAX_FILENAME_LENGTH];
+      };
+
+`char filename[MAX_FILENAME_LENGTH];` untuk menyimpan informasi mengenai semua file agar mudah untuk dikelola
+
+      int isFileAuthenticated(char *filename) {
+          // Memeriksa apakah nama file berakhir dengan "trashcan.csv" atau "parkinglot.csv"
+          int len = strlen(filename);
+          if (len >= 12 && strcmp(filename + len - 12, "trashcan.csv") == 0) {
+              return 1; // File lolos autentikasi
+          } else if (len >= 14 && strcmp(filename + len - 14, "parkinglot.csv") == 0) {
+              return 1; // File lolos autentikasi
+          }
+          return 0; // File tidak lolos autentikasi
+      }
+
+`if (len >= 12 && strcmp(filename + len - 12, "trashcan.csv") == 0)` untuk syarat autentikasi file jika berakhiran trashcan.csv dimana berjumlah 12 karakter
+
+`else if (len >= 14 && strcmp(filename + len - 14, "parkinglot.csv") == 0)` untuk syarat autentikasi file jika berakhiran parkinglot.csv dimana berjumlah 14 karakter
+
+`return 1` untuk menunjukkan indikasi bahwa file memenuhi syarat autentukasi
+
+`return 0` untuk menunjukkan indikasi bahwa file tidak memenuhi syarat autentikasi
+
+      void deleteFile(char *filepath) {
+          pid_t pid = fork();
+          if (pid < 0) {
+              perror("fork");
+              exit(EXIT_FAILURE);
+          } else if (pid == 0) { // Proses anak
+              if (remove(filepath) == 0) {
+                  printf("File %s tidak memenuhi syarat autentikasi dan telah dihapus.\n", filepath);
+              } else {
+                  perror("remove");
+              }
+              exit(EXIT_SUCCESS);
+          } else { // Proses induk
+              wait(NULL); // Memanggil wait di sini
+          }
+      }
+
+Fungsi diatas digunakan untuk menghapus file yang tidak memenuhi syarat autentikasi
+
+`pid_t pid = fork();` untuk memanggil fungsi sistem fork
+
+`if (pid < 0)` untuk kondisi jika gagal membuat proses baru
+
+`else if (pid == 0)` untuk kondisi pembuatan proses baru berhasil dibuat
+
+`wait(NULL);` untuk eksekusi proses induk agar menunggu proses childnya selesai berproses dahulu
+
+          if (shmdt(shm_ptr) == -1) {
+              perror("shmdt");
+              exit(EXIT_FAILURE);
+          }
+          
+ Fungsi diatas untuk melepaskan shared memory setelah proses program selesai agar tidak terjadi kebocoran data 
