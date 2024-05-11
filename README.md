@@ -183,9 +183,9 @@ Fungsi diatas untuk mencari tempat dengan rating tertinggi
 `fgets(line, sizeof(line), file);` untuk membaca dan membuang baris pertama atau baris header dalam file, seperti baris yang berisikan nama, rating
 
 `sscanf(line, "%[^,],%f", name, &rating);` untuk membaca isi file dengan penjelasan:
-- *%[^,]* dan *name* untuk membaca string hingga bertemu tanda koma dan akan menyimpannya ke dalam variabel name
+- *%[^,]*  dan  *name* untuk membaca string hingga bertemu tanda koma dan akan menyimpannya ke dalam variabel name
 
-- *,%f* dan *&rating* untuk  membaca nilai float setelah tanda koma dan akan menyimpannya ke dalam variabel rating
+- *,%f*  dan  *&rating* untuk  membaca nilai float setelah tanda koma dan akan menyimpannya ke dalam variabel rating
 
       void processCSV(char *filename) {
           int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
@@ -218,12 +218,10 @@ Fungsi diatas untuk mencari tempat dengan rating tertinggi
               exit(EXIT_FAILURE);
           }
       
-          // Mencari tempat dengan rating tertinggi dari file CSV dan menampilkannya
           struct Place bestPlace = findBestPlace(file);
           printf("Name: %s\n", bestPlace.name);
           printf("Rating: %.1f\n", bestPlace.rating);
       
-          // Menutup file dan melepaskan shared memory
           fclose(file);
           if (shmdt(shm_ptr) == -1) {
               perror("shmdt");
@@ -239,32 +237,12 @@ Fungsi diatas untuk menampilkan output dari program rate.c
 
 `printf("Filename: %s\n", filename);` untuk mencetak string Filename yang berisi nama file csv-nya
 
-``
+`sprintf(filepath, "./database/%s", filename);` untuk akses ke folder database
 
-      int main(int argc, char *argv[]) {
-          if (argc == 1) {
-              // Jika tidak ada argumen yang diberikan, tampilkan output untuk semua file CSV
-              DIR *dir;
-              struct dirent *ent;
-              if ((dir = opendir("./database")) != NULL) {
-                  while ((ent = readdir(dir)) != NULL) {
-                      if (strstr(ent->d_name, ".csv") != NULL) {
-                          processCSV(ent->d_name);
-                      }
-                  }
-                  closedir(dir);
-              } else {
-                  perror("opendir");
-                  return EXIT_FAILURE;
-              }
-          } else if (argc == 2) {
-              // Jika diberikan satu argumen, tampilkan output untuk file CSV yang disebutkan
-              processCSV(argv[1]);
-          } else {
-              // Jika diberikan lebih dari satu argumen, tampilkan pesan kesalahan
-              fprintf(stderr, "Usage: %s [filename.csv]\n", argv[0]);
-              return EXIT_FAILURE;
-          }
-      
-          return 0;
-      }
+`printf("Name: %s\n", bestPlace.name);` untuk mencari dan menyimpan nama tempat dengan reting terbaik ke dalam variabel name
+
+`printf("Rating: %.1f\n", bestPlace.rating);` untuk mencari dan menyimpan rating terbaik ke dalam variabel rating
+
+`fclose(file);` untuk melepas shared memory jika proses sudah selesai
+
+### soal 1e
