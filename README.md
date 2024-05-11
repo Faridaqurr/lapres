@@ -338,7 +338,6 @@ Fungsi untuk mengakses shared memory dari program auth.c
 
 `0666` token yang digunakan untuk akses shared memory
 
-          // Melepaskan shared memory
           if (shmdt(shm_ptr) == -1) {
               perror("shmdt");
               exit(EXIT_FAILURE);
@@ -591,6 +590,4 @@ Jika pada code sebelumnya hanya ada `if (argc != 2)` untuk memunculkan output se
 ![Screenshot from 2024-05-10 04-27-58](https://github.com/Faridaqurr/lapres/assets/150933246/5492e967-977a-4561-a30b-c7b0f4b18dbc)
 
 ![Screenshot from 2024-05-10 04-29-19](https://github.com/Faridaqurr/lapres/assets/150933246/6c9d3264-2629-48c4-8624-a42aa5175f4e)
-
-![Screenshot from 2024-05-10 04-32-36](https://github.com/Faridaqurr/lapres/assets/150933246/2c11c6ef-9b8d-4384-ba40-1898fad25339)
 
