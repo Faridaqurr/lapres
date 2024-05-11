@@ -56,14 +56,13 @@ Pada soal ini diminta untuk membuat sebuah program yang mengautentikasi file csv
 `char filename[MAX_FILENAME_LENGTH];` untuk menyimpan informasi mengenai semua file agar mudah untuk dikelola
 
       int isFileAuthenticated(char *filename) {
-          // Memeriksa apakah nama file berakhir dengan "trashcan.csv" atau "parkinglot.csv"
           int len = strlen(filename);
           if (len >= 12 && strcmp(filename + len - 12, "trashcan.csv") == 0) {
-              return 1; // File lolos autentikasi
+              return 1; 
           } else if (len >= 14 && strcmp(filename + len - 14, "parkinglot.csv") == 0) {
-              return 1; // File lolos autentikasi
+              return 1; 
           }
-          return 0; // File tidak lolos autentikasi
+          return 0; 
       }
 
 `if (len >= 12 && strcmp(filename + len - 12, "trashcan.csv") == 0)` untuk syarat autentikasi file jika berakhiran trashcan.csv dimana berjumlah 12 karakter
@@ -79,15 +78,15 @@ Pada soal ini diminta untuk membuat sebuah program yang mengautentikasi file csv
           if (pid < 0) {
               perror("fork");
               exit(EXIT_FAILURE);
-          } else if (pid == 0) { // Proses anak
+          } else if (pid == 0) { 
               if (remove(filepath) == 0) {
                   printf("File %s tidak memenuhi syarat autentikasi dan telah dihapus.\n", filepath);
               } else {
                   perror("remove");
               }
               exit(EXIT_SUCCESS);
-          } else { // Proses induk
-              wait(NULL); // Memanggil wait di sini
+          } else { 
+              wait(NULL); // 
           }
       }
 
@@ -107,3 +106,165 @@ Fungsi diatas digunakan untuk menghapus file yang tidak memenuhi syarat autentik
           }
           
  Fungsi diatas untuk melepaskan shared memory setelah proses program selesai agar tidak terjadi kebocoran data 
+
+### soal 1b
+
+Pada soal ini format dalam file csv nya harus sesuai dengan ketentuan soal
+
+![Screenshot from 2024-05-11 19-13-02](https://github.com/Faridaqurr/lapres/assets/150933246/44062f90-113a-4344-8f8f-2ef39783d7be)
+
+### soal 1c
+
+Pada soal ini program auth.c mengirimkan nama file csv yang lolos autentikasi ke shared memory
+      
+      void copyFilenameToSharedMemory(char *shm_ptr, char *filename) {
+          strcpy(shm_ptr, filename);
+      }
+      
+Fungsi diatas menyalin nama file yang lolos autentikasi ke dalam shared memory
+
+`strcpy(shm_ptr, filename);` untuk menyalin string dari _filename_ ke _shm_ptr_ 
+      
+      int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, IPC_CREAT | 0666);
+          if (shmid == -1) {
+              perror("shmget");
+              exit(EXIT_FAILURE);
+          }
+          char *shm_ptr = shmat(shmid, NULL, 0);
+          if (shm_ptr == (char *)-1) {
+              perror("shmat");
+              exit(EXIT_FAILURE);
+          }
+
+Fungsi diatas membuat shared memory 
+
+`0666` untuk token akses shared memory
+
+### soal 1d
+
+pada soal ini membuat program rate.c yang akan mengambil data csv dari shared memory dan akan memberi output tempat sampah dan tempat parkir rating terbaik dari data yang diambil
+
+      struct Place {
+          char name[MAX_FILENAME_LENGTH];
+          float rating;
+      };
+
+Fungsi diatas untuk menyimpan informasi tentang tempat sampah dan tempat parkir seperti nama dan juga rating
+
+`char name[MAX_FILENAME_LENGTH];` untuk  mendeklarasikan sebuah array karakter dengan nama _name_ yang dapat menampung string dengan panjang maksimum yang telah di define
+
+`float rating;` untuk mendeklarasikan variabel _rating_ bertipe float yang menyimpan data rating dari file csv
+
+      struct Place findBestPlace(FILE *file) {
+          struct Place bestPlace = {"", 0.0};
+          // Melewati baris header
+          char line[MAX_FILENAME_LENGTH];
+          fgets(line, sizeof(line), file);
+      
+          while (fgets(line, sizeof(line), file) != NULL) {
+              // Memisahkan nama tempat dan rating
+              char name[MAX_FILENAME_LENGTH];
+              float rating;
+              sscanf(line, "%[^,],%f", name, &rating);
+      
+              // Memilih tempat dengan rating terbaik
+              if (rating > bestPlace.rating) {
+                  strcpy(bestPlace.name, name);
+                  bestPlace.rating = rating;
+              }
+          }
+          return bestPlace;
+      }
+
+Fungsi diatas untuk mencari tempat dengan rating tertinggi
+
+`struct Place bestPlace = {"", 0.0};` untuk menyimpan informasi tempat dengan rating tertinggi dengan mengatur nama tempat kosong dan rating 0.0 
+
+`fgets(line, sizeof(line), file);` untuk membaca dan membuang baris pertama atau baris header dalam file, seperti baris yang berisikan nama, rating
+
+`sscanf(line, "%[^,],%f", name, &rating);` untuk membaca isi file dengan penjelasan:
+- *%[^,]* dan *name* untuk membaca string hingga bertemu tanda koma dan akan menyimpannya ke dalam variabel name
+
+- *,%f* dan *&rating* untuk  membaca nilai float setelah tanda koma dan akan menyimpannya ke dalam variabel rating
+
+      void processCSV(char *filename) {
+          int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);
+          if (shmid == -1) {
+              perror("shmget");
+              exit(EXIT_FAILURE);
+          }
+          char *shm_ptr = shmat(shmid, NULL, 0);
+          if (shm_ptr == (char *)-1) {
+              perror("shmat");
+              exit(EXIT_FAILURE);
+          }
+  
+          printf("\nType: ");
+          if (strstr(filename, "trashcan") != NULL) {
+              printf("Trash Can\n");
+          } else if (strstr(filename, "parkinglot") != NULL) {
+              printf("Parking Lot\n");
+          } else {
+              printf("Unknown\n");
+          }
+          printf("Filename: %s\n", filename);
+          printf("---------------------------------------\n");
+      
+          char filepath[MAX_FILENAME_LENGTH + 20];
+          sprintf(filepath, "./database/%s", filename);
+          FILE *file = fopen(filepath, "r");
+          if (file == NULL) {
+              perror("fopen");
+              exit(EXIT_FAILURE);
+          }
+      
+          // Mencari tempat dengan rating tertinggi dari file CSV dan menampilkannya
+          struct Place bestPlace = findBestPlace(file);
+          printf("Name: %s\n", bestPlace.name);
+          printf("Rating: %.1f\n", bestPlace.rating);
+      
+          // Menutup file dan melepaskan shared memory
+          fclose(file);
+          if (shmdt(shm_ptr) == -1) {
+              perror("shmdt");
+              exit(EXIT_FAILURE);
+          }
+      }
+
+Fungsi diatas untuk menampilkan output dari program rate.c
+
+`int shmid = shmget(SHARED_MEM_KEY, MAX_FILENAME_LENGTH, 0666);` untuk akses shared memory
+
+`printf("\nType: ");` untu mencetak string Type sesuai akhiran nama file
+
+`printf("Filename: %s\n", filename);` untuk mencetak string Filename yang berisi nama file csv-nya
+
+``
+
+      int main(int argc, char *argv[]) {
+          if (argc == 1) {
+              // Jika tidak ada argumen yang diberikan, tampilkan output untuk semua file CSV
+              DIR *dir;
+              struct dirent *ent;
+              if ((dir = opendir("./database")) != NULL) {
+                  while ((ent = readdir(dir)) != NULL) {
+                      if (strstr(ent->d_name, ".csv") != NULL) {
+                          processCSV(ent->d_name);
+                      }
+                  }
+                  closedir(dir);
+              } else {
+                  perror("opendir");
+                  return EXIT_FAILURE;
+              }
+          } else if (argc == 2) {
+              // Jika diberikan satu argumen, tampilkan output untuk file CSV yang disebutkan
+              processCSV(argv[1]);
+          } else {
+              // Jika diberikan lebih dari satu argumen, tampilkan pesan kesalahan
+              fprintf(stderr, "Usage: %s [filename.csv]\n", argv[0]);
+              return EXIT_FAILURE;
+          }
+      
+          return 0;
+      }
