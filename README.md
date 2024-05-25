@@ -166,7 +166,9 @@ Pada soal ini, diminta untuk mendekrip semua file sesuai tipe nya pada folder se
           return 0;
       }
 
-`static int xmp_getattr(const char *path, struct stat *stbuf)` untuk deklarasi fungsi 
+`static int xmp_getattr(const char *path, struct stat *stbuf)` untuk deklarasi fungsi get atribut (informasi dari direktori lain)
+
+`snprintf(fpath, sizeof(fpath), "%s%s", SENSITIVE_DIR, path);` untuk memetakan path yang lengkap agar fuse berjalan dengan benar
       
       static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
           DIR *dp;
@@ -193,3 +195,182 @@ Pada soal ini, diminta untuk mendekrip semua file sesuai tipe nya pada folder se
           closedir(dp);
           return 0;
       }
+
+` static int xmp_readdir(const char *path, void *buf,...` untuk deklarasi fungsi read direktori
+
+`dp = opendir(fpath);` untuk membuka direktori yang ditunjukkan path
+
+`while ((de = readdir(dp)) != NULL)...` untuk membaca isi direktori keseluruhan
+
+            int main(int argc, char *argv[]) {
+                log_file = fopen(LOG_FILE, "a");
+                if (!log_file) {
+                    perror("Failed to open log file");
+                    return 1;
+                }
+            
+                int ret = fuse_main(argc, argv, &xmp_oper, NULL);
+                fclose(log_file);
+                return ret;
+            }
+
+`int main(int argc, char *argv[])` untuk deklarasi fungsi main
+
+`log_file = fopen(LOG_FILE, "a");` untuk membuka file log yang akan diisi oleh fungsi
+
+### Rahasia-berkas
+
+            static int ask_password() {
+                char input[100];
+                printf("Enter the password to access the secret files: ");
+                scanf("%s", input);
+                if (strcmp(input, PASSWORD) == 0) {
+                    return 1;
+                } else {
+                    printf("Incorrect password. Access denied.\n");
+                    return 0;
+                }
+            }
+
+`static int ask_password()` untuk deklarasi fungsi ask password yang menampilkan tampilan masukkan password sebelum akses file
+
+`if (strcmp(input, PASSWORD) == 0)` untuk input password yang benar
+
+`else...` untuk input password yang salah
+
+            void split_path(const char *path, char *dir, char *file) {
+                const char *last_slash = strrchr(path, '/');
+                if (last_slash == NULL) {
+                    strcpy(dir, "");
+                    strcpy(file, path);
+                } else {
+                    strncpy(dir, path, last_slash - path + 1);
+                    dir[last_slash - path + 1] = '\0';
+                    strcpy(file, last_slash + 1);
+                }
+            }
+
+`void split_path(const char *path, char *dir, char *file)` untuk fungsi split path direktori agar tidak terjadi crash akses
+
+`const char *last_slash = strrchr(path, '/');` untuk mencari tanda "/" akhir
+
+`if (last_slash == NULL)` untuk slash jika tidak di temukan
+
+`else...` untuk slash jika ditemukan
+
+            static int xmp_open(const char *path, struct fuse_file_info *fi) {
+                if (strstr(path, RAHASIA_PREFIX) != NULL) {
+                    char dir[PATH_MAX];
+                    char file[NAME_MAX];
+                    split_path(path, dir, file);
+                    
+                    if (strstr(dir, SENSITIVE_DIR) != NULL) {
+                        if (!ask_password()) {
+                            return -EACCES;
+                        }
+                    }
+                }
+                
+                int res;
+                char fpath[PATH_MAX];
+            
+                snprintf(fpath, sizeof(fpath), "%s%s", SENSITIVE_DIR, path);
+            
+                res = open(fpath, fi->flags);
+                if (res == -1)
+                    return -errno;
+            
+                close(res);
+                return 0;
+            }
+
+`static int xmp_open(const char *path, struct fuse_file_info *fi)` untuk deklarasi fungsi open rahasia-berkas
+
+`if (strstr(path, RAHASIA_PREFIX) != NULL)...` untuk cek apakah file mengandung prefix rahasia
+
+`char dir[PATH_MAX];` untuk memisahkan path
+
+`if (!ask_password())` untuk file yang mengandung prefix akan dimintai password
+
+            static int xmp_chmod(const char *path, mode_t mode) {
+                char fpath[PATH_MAX];
+                snprintf(fpath, sizeof(fpath), "%s%s", SENSITIVE_DIR, path);
+            
+                int res = chmod(fpath, mode);
+                if (res == -1)
+                    return -errno;
+            
+                return 0;
+            }
+
+`static int xmp_chmod(const char *path, mode_t mode)` untuk deklarasi izin akses ke direktorinya (menghindari permission denied)
+
+`char fpath[PATH_MAX];` untuk membuat path lengkap dan benarnya
+
+`int res = chmod(fpath, mode);` untuk mengubah izin akses (mode)
+
+### Log file
+
+            static FILE *log_file;
+
+
+            static void log_message(const char *tag, const char *info, int success) {
+                time_t now = time(NULL);
+                struct tm *t = localtime(&now);
+                char timestamp[20];
+                strftime(timestamp, sizeof(timestamp), "%d/%m/%Y-%H:%M:%S", t);
+                fprintf(log_file, "[%s]::%s::[%s]::[%s]\n", success ? "SUCCESS" : "FAILED", timestamp, tag, info);
+                fflush(log_file);
+            }
+
+## Revisi
+
+- saya mengubah definenya menjadi :
+
+            #define LOG_FILE "/home/farida/sisop4/logs-fuse.log"
+            #define SENSITIVE_DIR "/home/farida/sisop4/sensitif"
+            #define RAHASIA_PREFIX "rahasia-berkas"
+            #define PASSWORD "secret_password"
+
+  hal ini untuk memudahkan mendeteksi folder sumber yang ingin diberikan izin akses dan dekrip isi filenya
+
+- saya menambahkan fungsi split path
+
+              void split_path(const char *path, char *dir, char *file) {
+                            const char *last_slash = strrchr(path, '/');
+                            if (last_slash == NULL) {
+                                strcpy(dir, "");
+                                strcpy(file, path);
+                            } else {
+                                strncpy(dir, path, last_slash - path + 1);
+                                dir[last_slash - path + 1] = '\0';
+                                strcpy(file, last_slash + 1);
+                            }
+                  }
+
+     hal ini agar tidak terjadi tabrakan antar path yang sedang dijalankan, sehingga fuse bisa menuju sumber file dan mengelola file dengan baik
+
+  - saya menambahkan fungsi chmod
+
+                static int xmp_chmod(const char *path, mode_t mode) {
+                            char fpath[PATH_MAX];
+                            snprintf(fpath, sizeof(fpath), "%s%s", SENSITIVE_DIR, path);
+                        
+                            int res = chmod(fpath, mode);
+                            if (res == -1)
+                                return -errno;
+                        
+                            return 0;
+                        }
+
+    hal ini agar tidak terjadi permission denied terus menerus ketika ingin mengakses folder, seperti sebelumnya saat akses rahasia-berkas selalu permission denied
+
+## Hasil Dokumentasi
+
+![sisop](https://github.com/Faridaqurr/lapres/assets/150933246/b5c596cc-4b3f-4ed5-ae4e-de4cce356154)
+
+![sisop1](https://github.com/Faridaqurr/lapres/assets/150933246/078010ff-33dd-4961-bf00-47f6c0734317)
+
+![sisop2](https://github.com/Faridaqurr/lapres/assets/150933246/53ec25fc-cfe3-4a0e-82fd-ada7d9593bc0)
+
+NB: mohon maaf untuk hasil dokumentasinya menggunakan kamera hp dikarenakan kali linux saya error sehingga tidak bisa record dari laptop dan saya belum sempat untuk screenshoot hasil pekerjaan saya sebelum linuxnya error
