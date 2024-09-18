@@ -1,5 +1,5 @@
 ## Pegawai Negeri Sebelah
-
+ 
 1. Mencari di kolom find packet details "password"
 2. Mencari yang memiliki format nama, password, jabatan
   ![image](https://github.com/user-attachments/assets/2b7ce85f-a6d6-4e96-9a3a-02105df6465d)
