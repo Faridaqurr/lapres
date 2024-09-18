@@ -66,5 +66,17 @@
 6. Setelah menjawab maka ketemulah Flagnya
    ![image](https://github.com/user-attachments/assets/b84c3afc-2ef5-4c76-ae99-146b109481ff)
 
+### Corporate Breach
+
+1. Saya mencoba memasukkan keyword http untuk mencari stream, lalu saya mencoba melihat masing-masing stream dan stream ini yang berbeda dikarenakan adanya indikasi nama attacker didalamnya
+   ![image](https://github.com/user-attachments/assets/31b7d304-4607-416a-8736-d8939f7296ca)
+2. Selanjutnya saya mencoba beberapa email yang saya filtermenggunakan @gmail.com
+   ![image](https://github.com/user-attachments/assets/78d93f8d-4ae0-4f19-ae47-7b77d01bd120)
+
+   ![Screenshot (153)](https://github.com/user-attachments/assets/48323798-c86b-4680-a5c6-3a84e05d2ae0)
+4. Lalu pada stream itu terlihat password yang digunakan untuk menjawab pertanyaan dan ketemulah Flagnya
+   ![Screenshot (154)](https://github.com/user-attachments/assets/3834b9dd-fd46-454e-a9e3-ee119a6cef42)
+   
+   ![Screenshot (152)](https://github.com/user-attachments/assets/5b42f320-bd72-4157-8e1a-ed14f2c415ba)
 
 
